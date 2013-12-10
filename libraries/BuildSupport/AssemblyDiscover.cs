@@ -89,8 +89,7 @@ namespace Utils.Lib.BuildSupport
                 var referencedAssemblies = assembly.GetReferencedAssemblies();
                 foreach (var refAss in referencedAssemblies)
                 {
-                    var match = candidateAsmFiles.Where((x => x.Value.GetName().Name == refAss.Name));
-                    var matchingFilename = match.FirstOrDefault();
+                    var matchingFilename = GetMatchingName(candidateAsmFiles, refAss);
                     if (matchingFilename.Key != null && !toCopy.Contains(matchingFilename.Key))
                     {
                         toCopy.Add(matchingFilename.Key);
@@ -104,5 +103,113 @@ namespace Utils.Lib.BuildSupport
             }
         }
 
+        private static KeyValuePair<string, Assembly> GetMatchingName(Dictionary<string, Assembly> candidateAsmFiles, AssemblyName refAss)
+        {
+            var match = candidateAsmFiles.Where((x => x.Value.GetName().Name == refAss.Name));
+            var matchingFilename = match.FirstOrDefault();
+            return matchingFilename;
+        }
+
+        public static Dictionary<string, string[]> FindDependencies(string[] mainAssmbFiles,
+                                                                    Dictionary<string, Assembly> candidateAsmFiles)
+        {
+            var allFileDepends = ToFilePathsDependencies(candidateAsmFiles);
+            return FindDependencies(mainAssmbFiles, allFileDepends);
+        }
+
+        public static Dictionary<string, string[]> FindDependencies(string[] mainAssmbFiles, Dictionary<string, string[]> allFileDepends)
+        {
+            var allref = new Dictionary<string, string[]>();
+            var result = new Dictionary<string, string[]>();
+            for (int i = 0; i < mainAssmbFiles.Length; i++)
+            {
+                RecursiveDepFind(allref, mainAssmbFiles[i], allFileDepends);
+            }
+            allref = DiffPackages(allref, mainAssmbFiles);
+            for (int i = 0; i < mainAssmbFiles.Length; i++)
+            {
+                result[mainAssmbFiles[i]] = allref[mainAssmbFiles[i]];
+            }
+            return result;
+        }
+
+        public static Dictionary<string, string[]> DiffPackages(Dictionary<string, string[]> allref, string[] packageKeys)
+        {
+            var result = new Dictionary<string, string[]>();
+            foreach (var k in allref.Keys)
+            {
+                result[k] = DiffPackages(allref[k], allref, packageKeys);
+            }
+            return result;
+        }
+
+        private static string[] DiffPackages(string[] allDeps, Dictionary<string, string[]> allref, string[] packageKeys)
+        {
+            string[] result = (string[])allDeps.Clone();
+            foreach (var dep in allDeps)
+            {
+                if (packageKeys.Contains(dep))
+                {
+                    var removed = allref[dep].ToList();
+                    removed.Add(dep);
+                    result = SetDiff(result, removed);
+                }
+            }
+            return result;
+        }
+
+        private static string[] SetDiff(string[] result, IEnumerable<string> removed)
+        {
+            return result.Where(x => !removed.Contains(x)).ToArray();
+        }
+
+        public static Dictionary<string, string[]> ToFilePathsDependencies(Dictionary<string, Assembly> candidateAsmFiles)
+        {
+            var assmbRef = new Dictionary<string, string[]>();
+            foreach (var candidateAsmFile in candidateAsmFiles)
+            {
+                var referencedAssemblies = candidateAsmFile.Value.GetReferencedAssemblies();
+                var deps = new List<string>();
+                foreach (var refAss in referencedAssemblies)
+                {
+                    var matchingFilename = GetMatchingName(candidateAsmFiles, refAss);
+                    if(matchingFilename.Key != null)
+                       deps.Add(matchingFilename.Key);
+                }
+                assmbRef.Add(candidateAsmFile.Key, deps.ToArray());
+            }
+            return assmbRef;
+        }
+
+        public static List<string> RecursiveDepFind(Dictionary<string, string[]> result, string file, Dictionary<string, string[]> assmbReferences)
+        {
+            // Note that this probably does not cater for circular dependencies. May be an issue for e.g. IKVM. Let it be... StackOverflow
+            if (result.ContainsKey(file))
+                return result[file].ToList();
+            if (!assmbReferences.ContainsKey(file))
+                return new List<string>();
+            var depFiles = assmbReferences[file];
+            var deps = new List<string>(depFiles);
+            foreach (var depFile in depFiles)
+            {
+                deps = deps.Union(RecursiveDepFind(result, depFile, assmbReferences)).ToList();
+            }
+            deps = deps.Intersect(assmbReferences.Keys.ToArray()).ToList();
+            result[file] = deps.ToArray();
+            return deps;
+        }
+
+        private static void RecursiveDepFindOutdated(Dictionary<string, string[]> result, string file, List<string> deps)
+        {
+            if (result.ContainsKey(file)) // all the dependencies of file has been found and flattened
+                foreach (var s in result[file])
+                {
+                    RecursiveDepFindOutdated(result, s, deps);
+                    if (!deps.Contains(s))
+                        deps.Add(s);
+                }
+            if (!deps.Contains(file))
+                deps.Add(file);
+        }
     }
 }

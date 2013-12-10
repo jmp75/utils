@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CopySelectedReferences", "a
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildSupport", "libraries\BuildSupport\BuildSupport.csproj", "{BF6E4FEE-67E4-4E9E-B8C0-CF06A4323CB9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NuGetPkger", "applications\NuGetPkger\NuGetPkger.csproj", "{CAE317AC-D972-43A5-B300-5476D0AA9ECB}"
+EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = Metaheuristics.vsmdi
@@ -30,6 +32,12 @@ Global
 		{BF6E4FEE-67E4-4E9E-B8C0-CF06A4323CB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BF6E4FEE-67E4-4E9E-B8C0-CF06A4323CB9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BF6E4FEE-67E4-4E9E-B8C0-CF06A4323CB9}.Release|x86.ActiveCfg = Release|Any CPU
+		{CAE317AC-D972-43A5-B300-5476D0AA9ECB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAE317AC-D972-43A5-B300-5476D0AA9ECB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAE317AC-D972-43A5-B300-5476D0AA9ECB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CAE317AC-D972-43A5-B300-5476D0AA9ECB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAE317AC-D972-43A5-B300-5476D0AA9ECB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CAE317AC-D972-43A5-B300-5476D0AA9ECB}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
